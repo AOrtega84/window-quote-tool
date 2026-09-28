@@ -1,5 +1,3 @@
-window-quote-v1-1.html
-100%
 <!doctype html>
 <html lang="en">
 <head>
@@ -70,16 +68,7 @@ input{width:100%;padding:13px;border:1px solid var(--line);border-radius:11px;fo
         <button id="bothBtn" onclick="setMode('both')">Inside + outside</button>
       </div>
     </div>
-
-    <!-- <div class="card">
-      <label class="check">
-        <input id="review" type="checkbox" onchange="render()">
-        <span><b>Needs adult review</b><div class="small">Second story, ladder, hard-water staining, paint, damage, or unusual access.</div></span>
-      </label>
-      <div id="reviewNotice" class="notice hidden">Don't give a final price for this job yet. Have an adult review it first.</div>
-    </div> -->
-
-    <div class="total-card">
+<div class="total-card">
       <div class="total-row"><div><div class="total-label">ESTIMATED TOTAL</div><div class="minimum">Minimum job: $30</div></div><div id="total" class="total">$30</div></div>
     </div>
     <button class="primary" onclick="showCustomerQuote()">Show Customer Quote</button>
@@ -92,7 +81,7 @@ input{width:100%;padding:13px;border:1px solid var(--line);border-radius:11px;fo
       <h2>Your estimate</h2>
       <div id="customerTotal" class="big">$0</div>
       <div id="quoteLines" class="quote-lines"></div>
-      <div class="small">Includes basic glass cleaning. Final price may change if unusual buildup, damage, or access issues are discovered.</div>
+      <div class="small">Includes basic glass cleaning. Ground-level standard windows only.</div>
     </div>
     <button class="primary" onclick="openResult()">Continue</button>
     <button class="secondary" onclick="showEstimator()">Back to Estimate</button>
@@ -169,7 +158,6 @@ function render(){
   PRICES.forEach(p=>document.getElementById('c-'+p.id).textContent=counts[p.id]);
   lastTotal=calc();
   document.getElementById('total').textContent=money(lastTotal);
-  document.getElementById('reviewNotice').classList.toggle('hidden',!document.getElementById('review').checked);
 }
 function showOnly(id){
   ['estimator','customer','result','history'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));
@@ -185,14 +173,13 @@ function showCustomerQuote(){
   });
   lines.push(`<div class="quote-line"><b>Cleaning</b><b>${mode==='both'?'Inside + outside':'Exterior only'}</b></div>`);
   if(lastTotal===30) lines.push(`<div class="quote-line"><span>Minimum job price</span><span>$30</span></div>`);
-  if(document.getElementById('review').checked) lines.push(`<div class="notice">Adult review required before this estimate is final.</div>`);
   document.getElementById('quoteLines').innerHTML=lines.join('');
   showOnly('customer');
 }
 function openResult(){showOnly('result')}
 function resetQuote(){
   counts=Object.fromEntries(PRICES.map(x=>[x.id,0]));
-  mode='exterior'; document.getElementById('review').checked=false;
+  mode='exterior';
   setMode('exterior'); render();
 }
 function saveResult(status){
