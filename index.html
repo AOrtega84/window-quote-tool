@@ -49,6 +49,22 @@ input{width:100%;padding:13px;border:1px solid var(--line);border-radius:11px;fo
 .nav{display:flex;gap:8px}.nav button{background:#e2e8f0;padding:9px 12px;border-radius:10px;font-weight:700}
 .check{display:flex;align-items:flex-start;gap:10px}.check input{width:20px;height:20px;margin:1px 0}
 .notice{padding:12px;border-radius:12px;background:var(--warnbg);color:var(--warn);font-size:13px;margin-top:10px}
+.schedule-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:4px;
+}
+.field-label{
+  display:block;
+  font-size:12px;
+  font-weight:700;
+  color:var(--muted);
+  margin:4px 0 0 2px;
+}
+@media(max-width:380px){
+  .schedule-row{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -94,6 +110,18 @@ input{width:100%;padding:13px;border:1px solid var(--line);border-radius:11px;fo
       <input id="custName" placeholder="Customer first name">
       <input id="custPhone" placeholder="Phone number" inputmode="tel">
       <input id="custAddress" placeholder="Address">
+      
+      <div class="schedule-row">
+        <div>
+          <label class="field-label" for="serviceDate">Service date</label>
+          <input id="serviceDate" type="date">
+        </div>
+        <div>
+          <label class="field-label" for="serviceTime">Service time</label>
+          <input id="serviceTime" type="time">
+        </div>
+      </div>
+      
       <div class="actions">
         <button class="book" onclick="saveResult('Booked')">Booked</button>
         <button onclick="saveResult('Follow Up')">Follow Up</button>
@@ -184,15 +212,56 @@ function resetQuote(){
 }
 function saveResult(status){
   const entry={
-    status,total:lastTotal,date:new Date().toLocaleString(),
+    status,
+    total:lastTotal,
+    date:new Date().toLocaleString(),
     name:document.getElementById('custName').value.trim(),
     phone:document.getElementById('custPhone').value.trim(),
-    address:document.getElementById('custAddress').value.trim()
+    address:document.getElementById('custAddress').value.trim(),
+    serviceDate:document.getElementById('serviceDate').value,
+    serviceTime:document.getElementById('serviceTime').value
   };
+
   const h=JSON.parse(localStorage.getItem('windowQuoteHistory')||'[]');
-  h.unshift(entry); localStorage.setItem('windowQuoteHistory',JSON.stringify(h));
-  ['custName','custPhone','custAddress'].forEach(id=>document.getElementById(id).value='');
-  resetQuote(); showHistory();
+  h.unshift(entry);
+  localStorage.setItem('windowQuoteHistory',JSON.stringify(h));
+
+  [
+    'custName',
+    'custPhone',
+    'custAddress',
+    'serviceDate',
+    'serviceTime'
+  ].forEach(id=>document.getElementById(id).value='');
+
+  resetQuote();
+  showHistory();
+}
+function formatAppointment(date,time){
+  if(!date && !time) return '';
+
+  let text='';
+
+  if(date){
+    const d=new Date(date+'T00:00:00');
+    text=d.toLocaleDateString([],{
+      weekday:'short',
+      month:'short',
+      day:'numeric'
+    });
+  }
+
+  if(time){
+    const t=new Date('2000-01-01T'+time);
+    const formattedTime=t.toLocaleTimeString([],{
+      hour:'numeric',
+      minute:'2-digit'
+    });
+
+    text+=(text?' at ':'')+formattedTime;
+  }
+
+  return text;
 }
 function showHistory(){
   const h=JSON.parse(localStorage.getItem('windowQuoteHistory')||'[]');
@@ -201,10 +270,22 @@ function showHistory(){
   document.getElementById('stats').textContent=`${h.length} quotes • ${booked.length} booked • ${money(revenue)} booked value`;
   document.getElementById('historyList').innerHTML=h.length?h.map(x=>`
     <div class="history-item">
-      <div class="history-top"><span>${x.status}${x.name?' — '+esc(x.name):''}</span><span>${money(x.total)}</span></div>
-      <div class="small">${esc(x.address||'No address')} • ${esc(x.date)}</div>
-    </div>`).join(''):'<div class="small">No quotes saved yet.</div>';
-  showOnly('history');
+      <div class="history-top">
+        <span>${x.status}${x.name?' — '+esc(x.name):''}</span>
+        <span>${money(x.total)}</span>
+      </div>
+  
+      <div class="small">
+        ${esc(x.address||'No address')} • ${esc(x.date)}
+      </div>
+  
+      ${x.serviceDate || x.serviceTime ? `
+        <div class="small" style="font-weight:700;color:var(--good);margin-top:5px">
+          📅 ${esc(formatAppointment(x.serviceDate,x.serviceTime))}
+        </div>
+      ` : ''}
+    </div>
+  `).join(''):'<div class="small">No quotes saved yet.</div>';
 }
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function clearHistory(){
